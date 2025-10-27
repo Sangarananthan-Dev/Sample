@@ -53,6 +53,34 @@ function detectVpn(ip, asnData) {
   }
 
   const orgName = (asnData.autonomous_system_organization || "").toLowerCase();
+  const asn = asnData.autonomous_system_number;
+
+  // Known VPN/Proxy ASNs (high confidence)
+  const knownVpnAsns = [
+    9009, // M247 (VPN/hosting provider)
+    60068, // CDN77
+    24940, // Hetzner Online
+    16509, // Amazon AWS
+    14061, // DigitalOcean
+    63949, // Linode
+    20473, // Choopa (Vultr)
+    21859, // ZenLayer
+    8100, // QuadraNet
+    62240, // Clouvider
+    30633, // Leaseweb
+    36352, // ColoCrossing
+    40676, // Psychz Networks
+    19531, // PEG TECH INC
+    46844, // Sharktech
+  ];
+
+  // Check ASN first (most reliable)
+  if (knownVpnAsns.includes(asn)) {
+    vpnIndicators.isVpn = true;
+    vpnIndicators.isHosting = true;
+    vpnIndicators.confidence = "high";
+    vpnIndicators.reasons.push(`Known VPN/hosting ASN: ${asn}`);
+  }
 
   // Common VPN provider keywords
   const vpnKeywords = [
@@ -60,6 +88,7 @@ function detectVpn(ip, asnData) {
     "proxy",
     "hosting",
     "datacenter",
+    "data center",
     "cloud",
     "virtual",
     "nordvpn",
@@ -75,14 +104,20 @@ function detectVpn(ip, asnData) {
     "tunnelbear",
     "hotspot shield",
     "hide.me",
+    "m247",
+    "colocation",
+    "colo",
+    "server",
+    "dedicated",
   ];
 
-  // Cloud/hosting provider keywords
+  // Cloud/hosting provider keywords (more comprehensive)
   const hostingKeywords = [
     "amazon",
     "aws",
     "azure",
     "google cloud",
+    "gcp",
     "digitalocean",
     "linode",
     "vultr",
@@ -90,10 +125,19 @@ function detectVpn(ip, asnData) {
     "hetzner",
     "scaleway",
     "contabo",
+    "leaseweb",
+    "quadranet",
+    "psychz",
+    "sharktech",
+    "choopa",
+    "colocation",
+    "datacentre",
+    "data centre",
+    "infrastructure",
   ];
 
-  // Tor exit node detection (simplified)
-  const torKeywords = ["tor", "exit node"];
+  // Tor exit node detection
+  const torKeywords = ["tor", "exit node", "exit relay"];
 
   // Check for VPN indicators
   for (const keyword of vpnKeywords) {
@@ -109,7 +153,9 @@ function detectVpn(ip, asnData) {
   for (const keyword of hostingKeywords) {
     if (orgName.includes(keyword)) {
       vpnIndicators.isHosting = true;
-      vpnIndicators.confidence = "medium";
+      if (!vpnIndicators.isVpn) {
+        vpnIndicators.confidence = "medium";
+      }
       vpnIndicators.reasons.push(`Hosting provider detected: ${keyword}`);
       break;
     }
