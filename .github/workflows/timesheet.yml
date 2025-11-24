@@ -1,15 +1,16 @@
 name: Auto Timesheet
 
 on:
-  push:           # Trigger on any commit push
+  push:
     branches:
       - main
       - master
-      - '**'      # all branches (optional)
+      - '**'     # all branches
 
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
@@ -19,15 +20,15 @@ jobs:
           MSG=$(git log -1 --pretty=format:"%s")
           echo "msg=$MSG" >> $GITHUB_OUTPUT
 
-      - name: Post to Timesheet API
+      - name: Post Timesheet Entry
         env:
           TIMESHEET_TOKEN: ${{ secrets.TIMESHEET_TOKEN }}
         run: |
           curl -X POST "https://api.strydehr.com/corehr/api/timesheet/v1" \
-          -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJCTmp2d3JGMXBWaVBsUE9sMDF3cDFJSUVBYVdHcW5XZ3Rwb3VpN1IzLUtrIn0.eyJleHAiOjE3NjM5OTc3NDksImlhdCI6MTc2Mzk2MTc0OSwianRpIjoiNjNhMWMxNTItNjczNS00ZThiLThlZWQtZGNhMmM1YzU0MjRmIiwiaXNzIjoiaHR0cHM6Ly9hdXRoLnN0cnlkZWhyLmNvbS9yZWFsbXMvRmlucXViZSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIwNDJlOTQ3MS04NTI5LTQ5ZjctOGIwMi1iOTQ2YWFlOWRmYzYiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiI0NjQ1MjFlNzQ2MTU0YzcyODQzOTJkZGY4YThhNGY5OCIsInNpZCI6IjY3MzMxNzg2LTBiYTctNGZhMS04NjFiLWZkMzQyNWY5NDI4NiIsImFjciI6IjEiLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiIsImRlZmF1bHQtcm9sZXMtZmlucXViZSJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6IlNhbmdhcmFuYXRoYW4gUHVnYWxlbnRoaSIsInByZWZlcnJlZF91c2VybmFtZSI6InNhbmdhcmFuYW50aGFuLnBAZGlnaWJ5dGV0ZWNobm9sb2dpZXMuY29tIiwiZ2l2ZW5fbmFtZSI6IlNhbmdhcmFuYXRoYW4iLCJmYW1pbHlfbmFtZSI6IlB1Z2FsZW50aGkiLCJlbWFpbCI6InNhbmdhcmFuYW50aGFuLnBAZGlnaWJ5dGV0ZWNobm9sb2dpZXMuY29tIn0.PSly6zbQcVTwTf1coI8_aptsU_Yjgqsul_zNjG4L0a-COKs_TQXKWD_nNywV8T6LjsC_0XVBEDdAoES21azTJ7aOe2ZekSaquxAE9IE7CLYaTJpjjncbHyi0JKoMn1ea9VSsQOiye1035vn-JgZUOUomiN8M1WZ5_paAUZPIMpXCCrK_bY5EzyMCYNJoBmpgNs7trc_Xo6UY4Z1TDYBYekBFebp028l3AoZ34YqgUnF7AysezTy9ORRwXETb9PmjdUGF8WJXBdbgDknmCrLKOXKDVuOnM2Uhq92lJTsct64lxCJGIWeEKLalc9MiLHhI4Z08C_ElH30adblBGqStKQ" \
-          -H "Content-Type: application/json" \
-          -d "{
-                \"date\": \"$(date +%Y-%m-%d)\",
-                \"hours\": 1,
-                \"description\": \"${{ steps.extract.outputs.msg }}\"
-              }"
+            -H "Authorization: Bearer $TIMESHEET_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+                  \"date\": \"$(date +%Y-%m-%d)\",
+                  \"hours\": 1,
+                  \"description\": \"${{ steps.extract.outputs.msg }}\"
+                }"
