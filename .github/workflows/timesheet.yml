@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - master
-      - '**'     # all branches
+      - '**'
 
 jobs:
   run:
@@ -24,11 +24,21 @@ jobs:
         env:
           TIMESHEET_TOKEN: ${{ secrets.TIMESHEET_TOKEN }}
         run: |
+          TODAY=$(date +%Y-%m-%d)
+          
+          START_TIME="${TODAY}T09:30:00"
+          END_TIME="${TODAY}T18:30:00"
+
           curl -X POST "https://api.strydehr.com/corehr/api/timesheet/v1" \
             -H "Authorization: Bearer $TIMESHEET_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{
-                  \"date\": \"$(date +%Y-%m-%d)\",
-                  \"hours\": 1,
-                  \"description\": \"${{ steps.extract.outputs.msg }}\"
+                  \"employee\": { \"empId\": 22 },
+                  \"client\": { \"clientId\": 3 },
+                  \"project\": { \"projectId\": 3 },
+                  \"startDate\": \"${TODAY}\",
+                  \"endDate\": \"${TODAY}\",
+                  \"startTime\": \"${START_TIME}\",
+                  \"endTime\": \"${END_TIME}\",
+                  \"taskName\": \"${{ steps.extract.outputs.msg }}\"
                 }"
